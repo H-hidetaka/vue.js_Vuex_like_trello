@@ -5,11 +5,9 @@ Vue.use(Vuex)
 
 const savedLists = localStorage.getItem('trello-lists')
 
-
-const store = new Vuex.Store({
-  // localStorageにはJSON形式の文字列型でデータが保存されているので、取得するときにはJSON.parse(取得するデータ)でオブジェクトに変換する必要があります。
+const store =  new Vuex.Store({
   state: {
-    lists: savedLists ? JSON.parse(savedLists):[
+    lists: savedLists ? JSON.parse(savedLists): [
       {
         title: 'Backlog',
         cards: [
@@ -30,20 +28,48 @@ const store = new Vuex.Store({
     ],
   },
   mutations: {
-    addlist(state,payload) {
-      state.list.push({ title: payload.title, cards:[] })
+    addlist(state, payload) {
+      state.lists.push({ title: payload.title, cards:[] })
     },
+    removelist(state, payload) {
+      state.lists.splice(payload.listIndex, 1)
+    },
+    addCardToList(state, payload) {
+      state.lists[payload.listIndex].cards.push({ body: payload.body })
+    },
+    removeCardFromList(state, payload) {
+      state.lists[payload.listIndex].cards.splice(payload.cardIndex, 1)
+    },
+    updateList(state, payload) {
+      state.lists = payload.lists
+    }
   },
   actions: {
-    addlist(context,payload) {
-      context.commit('addlist',payload)
+    addlist(context, payload) {
+      context.commit('addlist', payload)
     },
+    removelist(context, payload) {
+      context.commit('removelist', payload)
+    },
+    addCardToList(context, payload) {
+      context.commit('addCardToList', payload)
+    },
+    removeCardFromList(context, payload) {
+      context.commit('removeCardFromList', payload)
+    },
+    updateList(context, payload) {
+      context.commit('updateList', payload)
+    }
   },
   getters: {
+    totalCardCount(state) {
+      let count = 0
+      state.lists.map(content => count += content.cards.length)
+      return count
+    }
   }
 })
-// データの状態を更新後にlocalStorageへデータの状態を保存しています
-// localStorage.setItem('設定するキー', 文字列型のデータ)
+
 store.subscribe((mutation, state) => {
   localStorage.setItem('trello-lists', JSON.stringify(state.lists))
 })
